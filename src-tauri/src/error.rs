@@ -2,6 +2,8 @@ use std::io;
 use serde::Serialize;
 use thiserror::Error;
 
+use crate::business;
+
 #[derive(Error, Debug)]
 pub enum LauncherError {
   #[error("Error in Plugin Store: {0}")]
@@ -10,6 +12,8 @@ pub enum LauncherError {
   Io(#[from] io::Error),
   #[error("Error in Serde JSON: {0}")]
   SerdeJson(#[from] serde_json::Error),
+  #[error("Error in Authentication: {0}")]
+  Auth(#[from] business::auth::AuthError)
 }
 
 impl Serialize for LauncherError {
