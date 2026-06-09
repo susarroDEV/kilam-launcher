@@ -13,7 +13,9 @@ pub enum LauncherError {
   #[error("Error in Serde JSON: {0}")]
   SerdeJson(#[from] serde_json::Error),
   #[error("Error in Authentication: {0}")]
-  Auth(#[from] business::auth::AuthError)
+  Auth(#[from] business::auth::AuthError),
+  #[error("Error in Event Store {0}")]
+  EventStore(#[from] business::event_store::EventError)
 }
 
 impl Serialize for LauncherError {
