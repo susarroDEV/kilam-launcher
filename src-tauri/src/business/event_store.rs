@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use crate::error::Result;
@@ -46,17 +48,38 @@ pub struct Event {
 }
 
 pub trait EventStore {
-  async fn get_active_events(&self, uuid: String) -> Result<Vec<Event>>;
+  async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>>;
 }
 
 #[derive(Error, Debug)]
 pub enum EventError {
-  #[error("Fetch has failed")]
-  FetchFailed,
+  #[error("Fetch has failed: {0}")]
+  FetchFailed(#[from] reqwest::Error),
   #[error("Parse has failed")]
   ParseFailed,
   #[error("Event [{0}] was not found")]
   EventNotFound(String),
   #[error("No available events for [{0}] player")]
   EmptyAccesibleEvents(String)
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EventDTO {
+  pub event: Event,
+  pub status: EventStatus
+}
+
+pub fn calculate_status(event: &Event, disk_hashes: HashMap<String, String>) -> EventStatus {
+  for asset in &event.assets {
+    match disk_hashes.get(&asset.id) {
+      None => return EventStatus::NotInstalled,
+      Some(hash) 
+        if hash != &asset.sha256 => {
+          return EventStatus::Outdated;
+      }
+      _ => {}
+    }
+  }
+
+  return EventStatus::Ready
 }

@@ -13,7 +13,8 @@ pub fn run() {
           crate::commands::config::get_config,
           crate::commands::auth::login,
           crate::commands::auth::logout,
-          crate::commands::auth::current_session
+          crate::commands::auth::current_session,
+          crate::commands::event_store::get_active_events
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
