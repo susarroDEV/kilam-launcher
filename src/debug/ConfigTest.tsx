@@ -1,4 +1,4 @@
-import { LauncherConfig } from "../types/config";
+import { LauncherConfig } from "../types/config"
 
 function ConfigTest({config}: {config: LauncherConfig | null}) {
   return (

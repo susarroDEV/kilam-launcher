@@ -5,7 +5,7 @@ import { getConfig, getSession } from "./lib/ipc"
 import { useAuth } from "./store/auth"
 import MainScreen from "./pages/MainScreen"
 import LoginScreen from "./pages/LoginScreen"
-import ConfigTest from "./components/ConfigTest"
+import ConfigTest from "./debug/ConfigTest"
 
 function App() {
   const [checking, setChecking] = useState(true)

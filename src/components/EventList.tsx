@@ -1,6 +1,6 @@
-import { useEffect , useState } from "react";
-import { getActiveEvents } from "../lib/ipc";
-import { EventDTO } from "../types/event_store";
+import { useEffect , useState } from "react"
+import { getActiveEvents } from "../lib/ipc"
+import { EventDTO } from "../types/event_store"
 
 function EventList({uuid} : {uuid: string}) {
   const [events, setEvents] = useState<EventDTO[]>([])
@@ -75,4 +75,4 @@ function EventList({uuid} : {uuid: string}) {
   )
 }
 
-export default EventList;
+export default EventList
