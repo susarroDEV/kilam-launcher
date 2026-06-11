@@ -1,3 +1,4 @@
+use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 use crate::business::config::LauncherConfig;
 use crate::error::Result;
@@ -15,7 +16,7 @@ pub fn read_config (app_handle: tauri::AppHandle) -> Result<LauncherConfig> {
     None => {
       let default_config = LauncherConfig {
         java_path: None,
-        install_dir: String::from("/todo"),
+        install_dir: String::from(app_handle.path().app_data_dir()?.to_string_lossy().to_string()),
         close_on_launch: true
       };
 

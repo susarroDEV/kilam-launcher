@@ -15,7 +15,9 @@ pub enum LauncherError {
   #[error("Error in Authentication: {0}")]
   Auth(#[from] business::auth::AuthError),
   #[error("Error in Event Store {0}")]
-  EventStore(#[from] business::event_store::EventError)
+  EventStore(#[from] business::event_store::EventError),
+  #[error("Error in Tauri {0}")]
+  Tauri(#[from] tauri::Error)
 }
 
 impl Serialize for LauncherError {
