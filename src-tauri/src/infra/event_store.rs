@@ -73,10 +73,6 @@ impl EventStore for RemoteEventStore {
       |e| e.whitelist.contains(&uuid)
     );
 
-    if events.is_empty() {
-      return Err(EventError::EmptyAccesibleEvents(uuid).into());
-    }
-
     let mut events_dtos : Vec<EventDTO> = Vec::new();
 
     for event in events  {

@@ -58,9 +58,7 @@ pub enum EventError {
   #[error("Parse has failed")]
   ParseFailed,
   #[error("Event [{0}] was not found")]
-  EventNotFound(String),
-  #[error("No available events for [{0}] player")]
-  EmptyAccesibleEvents(String)
+  EventNotFound(String)
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
