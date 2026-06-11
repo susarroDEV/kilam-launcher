@@ -22,23 +22,25 @@ impl RemoteEventStore {
     }
   }
 
-  fn build_disk_hashes(&self, event: &Event) -> HashMap<String, String> {
-    let mut assets: HashMap<String, String> = HashMap::new();
+  async fn build_disk_hashes(install_dir: String, event: Event) -> HashMap<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+      let mut assets: HashMap<String, String> = HashMap::new();
 
-    for asset in &event.assets {
-      let complete_path = format!("{}/{}", self.install_dir, asset.path);
-      match read(complete_path) {
-        Err(_) => {continue;}
-        Ok(bytes) => {
-          let hash = Sha256::digest(&bytes);
-          let hex_string = hex::encode(hash);
-          
-          assets.insert(asset.id.clone(), hex_string);
+      for asset in &event.assets {
+        let complete_path = format!("{}/{}", install_dir, asset.path);
+        match read(complete_path) {
+          Err(_) => {continue;}
+          Ok(bytes) => {
+            let hash = Sha256::digest(&bytes);
+            let hex_string = hex::encode(hash);
+            
+            assets.insert(asset.id.clone(), hex_string);
+          }
         }
       }
-    }
 
-    assets
+      assets
+    }).await.unwrap_or_default()
   }
 
 }
@@ -76,7 +78,7 @@ impl EventStore for RemoteEventStore {
     let mut events_dtos : Vec<EventDTO> = Vec::new();
 
     for event in events  {
-      let disk_hashes = self.build_disk_hashes(&event);
+      let disk_hashes = RemoteEventStore::build_disk_hashes(self.install_dir.clone(), event.clone()).await;
       let status = calculate_status(&event, disk_hashes);
       let event_dto = EventDTO {
         event: event,
@@ -89,3 +91,5 @@ impl EventStore for RemoteEventStore {
     Ok(events_dtos)
   }
 }
+
+

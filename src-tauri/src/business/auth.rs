@@ -30,3 +30,17 @@ pub enum AuthError {
   #[error("There is no active session")]
   MissingSession
 }
+
+pub fn validate_username(username: &str) -> Result<()> {
+  let username = username.trim();
+    
+    if username.len() < 3 || username.len() > 16 {
+        return Err(AuthError::InvalidUsername(username.to_string()).into());
+    }
+    
+    if !username.chars().all(|c| c.is_alphanumeric() || c == '_') {
+        return Err(AuthError::InvalidUsername(username.to_string()).into());
+    }
+    
+    Ok(())  
+}

@@ -1,4 +1,4 @@
-use crate::business::auth::{AuthError, AuthProvider, AuthType, UserProfile};
+use crate::business::auth::{AuthError, AuthProvider, AuthType, UserProfile, validate_username};
 use crate::error::Result;
 use md5::{Md5, Digest};
 use tauri_plugin_store::StoreExt;
@@ -20,9 +20,7 @@ impl AuthProvider for OfflineAuthProvider {
   async fn login(&self, username: &str) -> Result<UserProfile> {
     let user = String::from(username);
 
-    if user.eq("") {
-      return Err(AuthError::InvalidUsername(user).into());
-    }
+    validate_username(username)?;
 
     let hash = Md5::digest(format!("OfflinePlayer:{}", user));
     let mut bytes: [u8; 16] = hash.into();
@@ -47,18 +45,10 @@ impl AuthProvider for OfflineAuthProvider {
   
   async fn logout(&self) -> Result<()> {
     let store = self.app_handle.store_builder("session.json").build()?;
-    let profile = store.get("profile");
-
-    match profile {
-      Some(_) => {
-        store.delete("profile");
-        Ok(())
-      }
-      None => {
-        return Err(AuthError::MissingSession.into());
-      }
+    if let Some(_) = store.get("profile") {
+      store.delete("profile");
     }
-
+    Ok(())
   }
 
   async fn current_session(&self) -> Result<Option<UserProfile>> {
