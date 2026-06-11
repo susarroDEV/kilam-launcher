@@ -32,7 +32,7 @@ function App() {
 
     loadConfig()
     loadSession()
-  }, [])
+  }, [setConfig, setProfile])
 
   return (
     <>

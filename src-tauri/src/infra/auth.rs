@@ -1,18 +1,16 @@
-use crate::business::auth::{AuthError, AuthProvider, AuthType, UserProfile, validate_username};
+use crate::business::auth::{validate_username, AuthProvider, AuthType, UserProfile};
 use crate::error::Result;
-use md5::{Md5, Digest};
+use md5::{Digest, Md5};
 use tauri_plugin_store::StoreExt;
 use uuid::Uuid;
 
 pub struct OfflineAuthProvider {
-  app_handle: tauri::AppHandle
+  app_handle: tauri::AppHandle,
 }
 
 impl OfflineAuthProvider {
   pub fn new(app_handle: tauri::AppHandle) -> Self {
-    Self {
-      app_handle : app_handle
-    }
+    Self { app_handle }
   }
 }
 
@@ -29,12 +27,12 @@ impl AuthProvider for OfflineAuthProvider {
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
     let uuid = Uuid::from_bytes(bytes);
-    
+
     let profile = UserProfile {
       username: user,
       uuid: String::from(uuid),
       auth_type: AuthType::Offline,
-      token: None
+      token: None,
     };
 
     let store = self.app_handle.store_builder("session.json").build()?;
@@ -42,10 +40,10 @@ impl AuthProvider for OfflineAuthProvider {
 
     Ok(profile)
   }
-  
+
   async fn logout(&self) -> Result<()> {
     let store = self.app_handle.store_builder("session.json").build()?;
-    if let Some(_) = store.get("profile") {
+    if store.get("profile").is_some() {
       store.delete("profile");
     }
     Ok(())
@@ -56,12 +54,8 @@ impl AuthProvider for OfflineAuthProvider {
     let profile = store.get("profile");
 
     match profile {
-      Some(p) => {
-        Ok(Some(serde_json::from_value(p)?))
-      }
-      None => {
-        Ok(None)
-      }
+      Some(p) => Ok(Some(serde_json::from_value(p)?)),
+      None => Ok(None),
     }
   }
 }

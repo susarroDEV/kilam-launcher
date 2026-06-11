@@ -1,24 +1,26 @@
 use std::collections::HashMap;
 use std::fs::read;
 
-use md5::Digest;
-use reqwest::{Client};
-use sha2::Sha256;
+use crate::business::event_store::{
+  calculate_status, Event, EventDTO, EventError, EventIndex, EventStore,
+};
 use crate::error::Result;
-use crate::business::event_store::{Event, EventDTO, EventError, EventIndex, EventStore, calculate_status};
+use md5::Digest;
+use reqwest::Client;
+use sha2::Sha256;
 
 const MANIFEST_URL: &str = "https://gist.githubusercontent.com/susarroDEV/c110ce866f2cfec390d03f117b2c54b6/raw/gistfile1.txt";
 
 pub struct RemoteEventStore {
   client: Client,
-  install_dir: String
+  install_dir: String,
 }
 
 impl RemoteEventStore {
   pub fn new(client: Client, install_dir: String) -> Self {
     Self {
-      client: client,
-      install_dir: install_dir
+      client,
+      install_dir,
     }
   }
 
@@ -29,61 +31,62 @@ impl RemoteEventStore {
       for asset in &event.assets {
         let complete_path = format!("{}/{}", install_dir, asset.path);
         match read(complete_path) {
-          Err(_) => {continue;}
+          Err(_) => {
+            continue;
+          }
           Ok(bytes) => {
             let hash = Sha256::digest(&bytes);
             let hex_string = hex::encode(hash);
-            
+
             assets.insert(asset.id.clone(), hex_string);
           }
         }
       }
 
       assets
-    }).await.unwrap_or_default()
+    })
+    .await
+    .unwrap_or_default()
   }
-
 }
 
 impl EventStore for RemoteEventStore {
   async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>> {
-    let index = self.client
-    .get(MANIFEST_URL)
-    .send()
-    .await
-    .map_err(EventError::FetchFailed)?
-    .json::<EventIndex>()
-    .await
-    .map_err(EventError::FetchFailed)?;
+    let index = self
+      .client
+      .get(MANIFEST_URL)
+      .send()
+      .await
+      .map_err(EventError::FetchFailed)?
+      .json::<EventIndex>()
+      .await
+      .map_err(EventError::FetchFailed)?;
 
-    let mut events : Vec<Event> = Vec::new();
+    let mut events: Vec<Event> = Vec::new();
 
     for url in &index.active_events {
       events.push(
-        self.client
+        self
+          .client
           .get(url)
           .send()
           .await
           .map_err(EventError::FetchFailed)?
           .json::<Event>()
           .await
-          .map_err(EventError::FetchFailed)?
+          .map_err(EventError::FetchFailed)?,
       );
     }
 
-    events.retain(
-      |e| e.whitelist.contains(&uuid)
-    );
+    events.retain(|e| e.whitelist.contains(&uuid));
 
-    let mut events_dtos : Vec<EventDTO> = Vec::new();
+    let mut events_dtos: Vec<EventDTO> = Vec::new();
 
-    for event in events  {
-      let disk_hashes = RemoteEventStore::build_disk_hashes(self.install_dir.clone(), event.clone()).await;
+    for event in events {
+      let disk_hashes =
+        RemoteEventStore::build_disk_hashes(self.install_dir.clone(), event.clone()).await;
       let status = calculate_status(&event, disk_hashes);
-      let event_dto = EventDTO {
-        event: event,
-        status: status
-      };
+      let event_dto = EventDTO { event, status };
 
       events_dtos.push(event_dto);
     }
@@ -91,5 +94,3 @@ impl EventStore for RemoteEventStore {
     Ok(events_dtos)
   }
 }
-
-

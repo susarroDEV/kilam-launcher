@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use crate::error::Result;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EventIndex {
-  pub active_events: Vec<String>
+  pub active_events: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -14,7 +14,7 @@ pub struct Asset {
   pub id: String,
   pub url: String,
   pub sha256: String,
-  pub path: String
+  pub path: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,7 +22,7 @@ pub struct Asset {
 pub enum ModLoader {
   Fabric,
   Forge,
-  Vanilla
+  Vanilla,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -30,7 +30,7 @@ pub enum ModLoader {
 pub enum EventStatus {
   NotInstalled,
   Outdated,
-  Ready
+  Ready,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -44,7 +44,7 @@ pub struct Event {
   pub modloader_version: String,
   pub server_ip: String,
   pub whitelist: Vec<String>,
-  pub assets: Vec<Asset>
+  pub assets: Vec<Asset>,
 }
 
 pub trait EventStore {
@@ -58,26 +58,25 @@ pub enum EventError {
   #[error("Parse has failed")]
   ParseFailed,
   #[error("Event [{0}] was not found")]
-  EventNotFound(String)
+  EventNotFound(String),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EventDTO {
   pub event: Event,
-  pub status: EventStatus
+  pub status: EventStatus,
 }
 
 pub fn calculate_status(event: &Event, disk_hashes: HashMap<String, String>) -> EventStatus {
   for asset in &event.assets {
     match disk_hashes.get(&asset.id) {
       None => return EventStatus::NotInstalled,
-      Some(hash) 
-        if hash != &asset.sha256 => {
-          return EventStatus::Outdated;
+      Some(hash) if hash != &asset.sha256 => {
+        return EventStatus::Outdated;
       }
       _ => {}
     }
   }
 
-  return EventStatus::Ready
+  EventStatus::Ready
 }

@@ -1,5 +1,5 @@
-use std::io;
 use serde::Serialize;
+use std::io;
 use thiserror::Error;
 
 use crate::business;
@@ -17,15 +17,15 @@ pub enum LauncherError {
   #[error("Error in Event Store {0}")]
   EventStore(#[from] business::event_store::EventError),
   #[error("Error in Tauri {0}")]
-  Tauri(#[from] tauri::Error)
+  Tauri(#[from] tauri::Error),
 }
 
 impl Serialize for LauncherError {
   fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
   where
-      S: serde::Serializer
+    S: serde::Serializer,
   {
-      serializer.serialize_str(&self.to_string())
+    serializer.serialize_str(&self.to_string())
   }
 }
 
