@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import "./App.css"
 import { useConfig } from "./store/config"
 import { getConfig, getSession } from "./lib/ipc"
@@ -8,6 +8,8 @@ import LoginScreen from "./pages/LoginScreen"
 import ConfigTest from "./components/ConfigTest"
 
 function App() {
+  const [checking, setChecking] = useState(true)
+
   const config = useConfig((state) => state.config) 
   const setConfig = useConfig((state) => state.setConfig)
 
@@ -19,10 +21,13 @@ function App() {
     const loadConfig = async() => {
       setConfig(await getConfig())
     }
-
+    
     const loadSession = async() => {
       const p = await getSession()
-      if (p) setProfile(p)
+      if (p) {
+        setProfile(p)
+      }
+      setChecking(false)
     }
 
     loadConfig()
@@ -31,22 +36,14 @@ function App() {
 
   return (
     <>
-      {(
-        profile
-        ?
-        <>
-          <header>
-            <ConfigTest config = {config}/>
-          </header>
-          <MainScreen/>
-        </>
+      <header>
+        <ConfigTest config = {config}/>
+      </header>
+      {!checking  &&
+        (profile ?
+        <MainScreen/>
         :
-        <>
-          <header>
-            <ConfigTest config = {config}/>
-          </header>
-          <LoginScreen />
-        </>
+        <LoginScreen/>
       )}
     </>
   )
