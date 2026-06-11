@@ -1,3 +1,4 @@
+import EventList from "../components/EventList"
 import { logout } from "../lib/ipc"
 import { useAuth } from "../store/auth"
 
@@ -29,6 +30,12 @@ function MainScreen() {
       >
         Logout
       </button>
+      {
+        profile && 
+        <EventList
+          uuid={profile.uuid}
+          />
+      }
     </main>
   )
 }

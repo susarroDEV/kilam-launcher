@@ -14,6 +14,7 @@ function App() {
   const profile = useAuth((state) => state.profile)
   const setProfile = useAuth((state) => state.setProfile)
 
+
   useEffect(() => {
     const loadConfig = async() => {
       setConfig(await getConfig())
@@ -26,8 +27,7 @@ function App() {
 
     loadConfig()
     loadSession()
-  }, []
-  )
+  }, [])
 
   return (
     <>
