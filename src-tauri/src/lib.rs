@@ -1,5 +1,8 @@
-mod error;
+use reqwest::Client;
+use tauri::Manager;
+
 pub use error::{LauncherError, Result};
+mod error;
 mod commands;
 mod business;
 mod infra;
@@ -9,6 +12,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .setup(|app| {
+          app.manage(Client::new());
+          Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
           crate::commands::config::get_config,
           crate::commands::auth::login,

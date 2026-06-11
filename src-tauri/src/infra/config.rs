@@ -3,7 +3,7 @@ use tauri_plugin_store::StoreExt;
 use crate::business::config::LauncherConfig;
 use crate::error::Result;
 
-pub fn read_config (app_handle: tauri::AppHandle) -> Result<LauncherConfig> {
+pub fn read_config (app_handle: &tauri::AppHandle) -> Result<LauncherConfig> {
   let store = app_handle.store_builder("config.json").build()?;
   let config = store.get("config");
 

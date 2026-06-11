@@ -4,6 +4,6 @@ use crate::error::Result;
 
 #[tauri::command]
 pub fn get_config(app_handle: tauri::AppHandle) -> Result<LauncherConfig> {
-  let config = read_config(app_handle)?;
+  let config = read_config(&app_handle)?;
   Ok(config)
 }
