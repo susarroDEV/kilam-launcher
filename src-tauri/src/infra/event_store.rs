@@ -7,7 +7,7 @@ use sha2::Sha256;
 use crate::error::Result;
 use crate::business::event_store::{Event, EventDTO, EventError, EventIndex, EventStore, calculate_status};
 
-const MANIFEST_URL: &str = "https://gist.githubusercontent.com/susarroDEV/c110ce866f2cfec390d03f117b2c54b6/raw/d80d4d36558e6311c77299e4d625bd637d4d3487/gistfile1.txt";
+const MANIFEST_URL: &str = "https://gist.githubusercontent.com/susarroDEV/c110ce866f2cfec390d03f117b2c54b6/raw/gistfile1.txt";
 
 pub struct RemoteEventStore {
   client: Client,
