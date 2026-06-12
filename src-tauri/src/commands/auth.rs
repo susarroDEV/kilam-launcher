@@ -1,10 +1,13 @@
+use std::sync::Arc;
+
 use crate::business::auth::{AuthProvider, UserProfile};
 use crate::error::Result;
-use crate::infra::auth::OfflineAuthProvider;
 
 #[tauri::command]
-pub async fn login(app_handle: tauri::AppHandle, username: String) -> Result<UserProfile> {
-  let provider = OfflineAuthProvider::new(app_handle);
+pub async fn login(
+    provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>, 
+    username: String
+  ) -> Result<UserProfile> {
 
   let profile = provider.login(&username).await?;
 
@@ -12,8 +15,9 @@ pub async fn login(app_handle: tauri::AppHandle, username: String) -> Result<Use
 }
 
 #[tauri::command]
-pub async fn logout(app_handle: tauri::AppHandle) -> Result<()> {
-  let provider = OfflineAuthProvider::new(app_handle);
+pub async fn logout(
+    provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>
+  ) -> Result<()> {
 
   provider.logout().await?;
 
@@ -21,8 +25,9 @@ pub async fn logout(app_handle: tauri::AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn current_session(app_handle: tauri::AppHandle) -> Result<Option<UserProfile>> {
-  let provider = OfflineAuthProvider::new(app_handle);
+pub async fn current_session(
+    provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>
+  ) -> Result<Option<UserProfile>> {
 
   let profile = provider.current_session().await?;
 

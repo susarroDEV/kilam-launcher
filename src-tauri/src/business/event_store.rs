@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::error::Result;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -47,6 +48,7 @@ pub struct Event {
   pub assets: Vec<Asset>,
 }
 
+#[async_trait]
 pub trait EventStore {
   async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>>;
 }

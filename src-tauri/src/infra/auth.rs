@@ -1,5 +1,6 @@
 use crate::business::auth::{validate_username, AuthProvider, AuthType, UserProfile};
 use crate::error::Result;
+use async_trait::async_trait;
 use md5::{Digest, Md5};
 use tauri_plugin_store::StoreExt;
 use uuid::Uuid;
@@ -14,6 +15,7 @@ impl OfflineAuthProvider {
   }
 }
 
+#[async_trait]
 impl AuthProvider for OfflineAuthProvider {
   async fn login(&self, username: &str) -> Result<UserProfile> {
     let user = String::from(username);

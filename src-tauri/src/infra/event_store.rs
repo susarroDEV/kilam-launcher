@@ -5,6 +5,7 @@ use crate::business::event_store::{
   calculate_status, Event, EventDTO, EventError, EventIndex, EventStore,
 };
 use crate::error::Result;
+use async_trait::async_trait;
 use md5::Digest;
 use reqwest::Client;
 use sha2::Sha256;
@@ -50,6 +51,7 @@ impl RemoteEventStore {
   }
 }
 
+#[async_trait]
 impl EventStore for RemoteEventStore {
   async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>> {
     let index = self

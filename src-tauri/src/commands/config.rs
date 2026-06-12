@@ -1,9 +1,12 @@
-use crate::business::config::LauncherConfig;
+use std::sync::Arc;
+
+use crate::business::config::{ConfigStore, LauncherConfig};
 use crate::error::Result;
-use crate::infra::config::read_config;
 
 #[tauri::command]
-pub fn get_config(app_handle: tauri::AppHandle) -> Result<LauncherConfig> {
-  let config = read_config(&app_handle)?;
+pub async fn get_config(
+    config_store: tauri::State<'_, Arc<dyn ConfigStore + Send + Sync>>
+  ) -> Result<LauncherConfig> {
+  let config = config_store.read_config().await?;
   Ok(config)
 }

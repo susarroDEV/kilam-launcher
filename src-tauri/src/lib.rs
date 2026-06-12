@@ -1,7 +1,15 @@
+use std::sync::Arc;
 use reqwest::Client;
 use tauri::Manager;
+use crate::business::auth::AuthProvider;
+use crate::business::config::ConfigStore;
+use crate::business::event_store::EventStore;
+use crate::infra::auth::OfflineAuthProvider;
+use crate::infra::config::LocalConfigStore;
+use crate::infra::event_store::RemoteEventStore;
 
-pub use error::{LauncherError, Result};
+pub use error::LauncherError;
+
 mod business;
 mod commands;
 mod error;
@@ -14,10 +22,7 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_store::Builder::default().build())
-    .setup(|app| {
-      app.manage(Client::new());
-      Ok(())
-    })
+    .setup(setup)
     .invoke_handler(tauri::generate_handler![
       crate::commands::config::get_config,
       crate::commands::auth::login,
@@ -27,4 +32,25 @@ pub fn run() {
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+}
+
+fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+  let auth_provider: Arc<dyn AuthProvider + Send + Sync> = 
+    Arc::new(OfflineAuthProvider::new(app.handle().clone()));
+  
+  app.manage(auth_provider);
+  
+  let client = Client::new();
+  let event_store: Arc<dyn EventStore + Send + Sync> =
+    Arc::new(RemoteEventStore::new(client.clone(), String::new()));
+  
+  app.manage(client);
+  app.manage(event_store);
+  
+  let config_store: Arc<dyn ConfigStore + Send + Sync> =
+    Arc::new(LocalConfigStore::new(app.handle().clone()));
+
+  app.manage(config_store);
+
+  Ok(())
 }

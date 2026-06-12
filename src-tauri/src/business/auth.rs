@@ -1,4 +1,5 @@
 use crate::error::Result;
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -17,6 +18,7 @@ pub struct UserProfile {
   pub auth_type: AuthType,
 }
 
+#[async_trait]
 pub trait AuthProvider {
   async fn login(&self, username: &str) -> Result<UserProfile>;
   async fn logout(&self) -> Result<()>;

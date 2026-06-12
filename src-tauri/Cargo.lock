@@ -2065,6 +2065,7 @@ dependencies = [
 name = "kilam-launcher"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "hex",
  "md-5",
  "reqwest",
