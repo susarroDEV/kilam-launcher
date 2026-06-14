@@ -27,6 +27,7 @@ pub fn run() {
     .setup(setup)
     .invoke_handler(tauri::generate_handler![
       crate::commands::config::get_config,
+      crate::commands::config::update_config,
       crate::commands::auth::login,
       crate::commands::auth::logout,
       crate::commands::auth::current_session,
