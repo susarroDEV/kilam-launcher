@@ -1,6 +1,7 @@
 import { useEffect , useState } from "react"
 import { getActiveEvents } from "../lib/ipc"
 import { EventDTO } from "../types/event_store"
+import EventItem from "./EventItem"
 
 function EventList({uuid} : {uuid: string}) {
   const [events, setEvents] = useState<EventDTO[]>([])
@@ -49,17 +50,7 @@ function EventList({uuid} : {uuid: string}) {
                 {
                 events.map(
                   dto => (
-                    <li key={dto.event.id}>
-                      <header>
-                        {dto.status}
-                      </header>
-                      <h1>
-                        {dto.event.name}
-                      </h1>
-                      <p>
-                        {dto.event.description}
-                      </p>
-                    </li>
+                    <EventItem key={dto.event.id} dto={dto} />
                   )
                 )
               }

@@ -1,7 +1,9 @@
 import { invoke } from "@tauri-apps/api/core"
 import { LauncherConfig } from "../types/config"
 import { UserProfile } from "../types/auth"
-import { EventDTO } from "../types/event_store"
+import { EventDTO, Event } from "../types/event_store"
+import { DownloadProgress, DownloadResult } from "../types/downloader"
+import { listen } from "@tauri-apps/api/event"
 
 // CONFIG
 
@@ -27,4 +29,26 @@ export async function getSession() : Promise<UserProfile | null> {
 
 export async function getActiveEvents(uuid: string) : Promise<EventDTO[]>   {
   return invoke<EventDTO[]>("get_active_events", {uuid})
+}
+
+// DOWNLOADER
+
+export async function downloadEvent(event: Event, install_dir: string) : Promise<DownloadResult> {
+  return invoke<DownloadResult>("download_event", {event, installDir: install_dir})
+}
+
+export async function onDownloadProgress(
+  callback: (progress: DownloadProgress) => void
+) {
+  return listen<DownloadProgress>("download://progress", (event) => {
+    callback(event.payload)
+  })
+}
+
+export async function onDownloadComplete(
+  callback: (result: DownloadResult) => void
+) {
+  return listen<DownloadResult>("download://complete", (event) => {
+    callback(event.payload)
+  })
 }
