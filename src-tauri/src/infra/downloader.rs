@@ -70,7 +70,7 @@ impl HttpDownloader {
     while let Some(chunk) = response.chunk().await.map_err(DownloaderError::DownloadFailed)? {
       file.write_all(&chunk).map_err(DownloaderError::Io)?;
       downloaded_bytes += chunk.len() as u64;
-      self.app_handle.emit("download://progress", 
+      self.app_handle.emit("download:progress", 
         DownloadProgress {
           event_id: event_id.to_string(),
           asset_id: asset.id.clone(),
@@ -86,7 +86,7 @@ impl HttpDownloader {
         rename(tmp_path, path).map_err(DownloaderError::Io)?;
       }
       Err(e) => {
-        self.app_handle.emit("download://complete", 
+        self.app_handle.emit("download:complete", 
         DownloadResult {
             event_id: event_id.to_string(),
             outcome: DownloadOutcome::Failure(e.to_string())
@@ -107,7 +107,7 @@ impl Downloader for HttpDownloader {
       self.download_asset(asset, &event.id, &install_dir).await?;
     }
 
-    self.app_handle.emit("download://complete", 
+    self.app_handle.emit("download:complete", 
       DownloadResult {
         event_id: event.id.clone(),
         outcome: DownloadOutcome::Success

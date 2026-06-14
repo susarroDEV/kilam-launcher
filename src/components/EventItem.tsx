@@ -34,7 +34,9 @@ function EventItem({dto}: {dto: EventDTO}) {
         if (progress.event_id == dto.event.id) setProgress(progress)
       })
       unlistenComplete = await onDownloadComplete((result) => {
-        if (result.outcome.kind === "success") {
+        console.log("download complete", result)
+        if (result.outcome === "success") {
+          console.log("setting status to ready")
           setStatus(EventStatus.Ready)
         }
         setDownloading(false)

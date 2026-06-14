@@ -1,6 +1,4 @@
-export type DownloadOutcome =
-  | { kind: "success" }
-  | { kind: "failure"; message: string }
+export type DownloadOutcome = "success" | { failure: string }
 
 export enum DownloadStatus {
   Pending = "pending",

@@ -40,7 +40,7 @@ export async function downloadEvent(event: Event, install_dir: string) : Promise
 export async function onDownloadProgress(
   callback: (progress: DownloadProgress) => void
 ) {
-  return listen<DownloadProgress>("download://progress", (event) => {
+  return listen<DownloadProgress>("download:progress", (event) => {
     callback(event.payload)
   })
 }
@@ -48,7 +48,7 @@ export async function onDownloadProgress(
 export async function onDownloadComplete(
   callback: (result: DownloadResult) => void
 ) {
-  return listen<DownloadResult>("download://complete", (event) => {
+  return listen<DownloadResult>("download:complete", (event) => {
     callback(event.payload)
   })
 }
