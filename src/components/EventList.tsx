@@ -32,7 +32,7 @@ function EventList({uuid} : {uuid: string}) {
     return () => { 
       cancelled = true 
     }
-  }, [uuid])
+  }, [uuid, config])
 
   return (
     <>

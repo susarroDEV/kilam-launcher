@@ -11,10 +11,10 @@ function EventItem({dto}: {dto: EventDTO}) {
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
 
   const config = useConfig((state) => state.config)
-
+  
   const handleDownload = async () => {
     if (!config) return
-
+    
     setDownloading(true)
     try {
       await downloadEvent(dto.event, config.install_dir)
@@ -25,13 +25,15 @@ function EventItem({dto}: {dto: EventDTO}) {
     
   }
 
+  const eventId = dto.event.id
+
   useEffect(() => {
     let unlistenProgress: (() => void) | null = null
     let unlistenComplete: (() => void) | null = null
 
     const setup = async () => {
       unlistenProgress = await onDownloadProgress((progress) => {
-        if (progress.event_id == dto.event.id) setProgress(progress)
+        if (progress.event_id == eventId) setProgress(progress)
       })
       unlistenComplete = await onDownloadComplete((result) => {
         console.log("download complete", result)
@@ -49,7 +51,7 @@ function EventItem({dto}: {dto: EventDTO}) {
       unlistenProgress?.()
       unlistenComplete?.()
     }
-  }, [])
+  }, [eventId])
 
   return (
     <li>
