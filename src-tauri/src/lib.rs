@@ -3,9 +3,11 @@ use reqwest::Client;
 use tauri::Manager;
 use crate::business::auth::AuthProvider;
 use crate::business::config::ConfigStore;
+use crate::business::downloader::Downloader;
 use crate::business::event_store::EventStore;
 use crate::infra::auth::OfflineAuthProvider;
 use crate::infra::config::LocalConfigStore;
+use crate::infra::downloader::HttpDownloader;
 use crate::infra::event_store::RemoteEventStore;
 
 pub use error::LauncherError;
@@ -28,7 +30,8 @@ pub fn run() {
       crate::commands::auth::login,
       crate::commands::auth::logout,
       crate::commands::auth::current_session,
-      crate::commands::event_store::get_active_events
+      crate::commands::event_store::get_active_events,
+      crate::commands::downloader::download_event
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
@@ -44,13 +47,20 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
   let event_store: Arc<dyn EventStore + Send + Sync> =
     Arc::new(RemoteEventStore::new(client.clone(), String::new()));
   
-  app.manage(client);
   app.manage(event_store);
-  
+    
   let config_store: Arc<dyn ConfigStore + Send + Sync> =
     Arc::new(LocalConfigStore::new(app.handle().clone()));
-
+    
   app.manage(config_store);
+    
+  
+  let downloader: Arc<dyn Downloader + Send + Sync> =
+    Arc::new(HttpDownloader::new(app.handle().clone(), client.clone()));
+  
+  app.manage(downloader);
+
+  app.manage(client);
 
   Ok(())
 }

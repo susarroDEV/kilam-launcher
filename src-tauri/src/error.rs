@@ -1,5 +1,4 @@
 use serde::Serialize;
-use std::io;
 use thiserror::Error;
 
 use crate::business;
@@ -8,8 +7,6 @@ use crate::business;
 pub enum LauncherError {
   #[error("Error in Plugin Store: {0}")]
   Store(#[from] tauri_plugin_store::Error),
-  #[error("Error in Input/Output: {0}")]
-  Io(#[from] io::Error),
   #[error("Error in Serde JSON: {0}")]
   SerdeJson(#[from] serde_json::Error),
   #[error("Error in Authentication: {0}")]
@@ -18,6 +15,8 @@ pub enum LauncherError {
   EventStore(#[from] business::event_store::EventError),
   #[error("Error in Tauri {0}")]
   Tauri(#[from] tauri::Error),
+  #[error("Error in Downloader {0}")]
+  Downloader(#[from] business::downloader::DownloaderError)
 }
 
 impl Serialize for LauncherError {
