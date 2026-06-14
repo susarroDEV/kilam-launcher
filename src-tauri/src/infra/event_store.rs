@@ -18,9 +18,7 @@ pub struct RemoteEventStore {
 
 impl RemoteEventStore {
   pub fn new(client: Client) -> Self {
-    Self {
-      client
-    }
+    Self { client }
   }
 
   async fn build_disk_hashes(install_dir: String, event: Event) -> HashMap<String, String> {

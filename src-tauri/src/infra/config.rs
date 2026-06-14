@@ -5,7 +5,7 @@ use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
 pub struct LocalConfigStore {
-  app_handle: tauri::AppHandle
+  app_handle: tauri::AppHandle,
 }
 
 impl LocalConfigStore {
@@ -29,7 +29,8 @@ impl ConfigStore for LocalConfigStore {
       None => {
         let default_config = LauncherConfig {
           java_path: None,
-          install_dir: self.app_handle
+          install_dir: self
+            .app_handle
             .path()
             .app_data_dir()?
             .to_string_lossy()

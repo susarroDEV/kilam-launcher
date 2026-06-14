@@ -1,8 +1,8 @@
+use crate::error::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
-use crate::error::Result;
 use std::io;
+use thiserror::Error;
 
 use crate::business::event_store::Event;
 
@@ -12,7 +12,7 @@ pub enum DownloadStatus {
   Pending,
   Downloading,
   Done,
-  Failed
+  Failed,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -21,20 +21,20 @@ pub struct DownloadProgress {
   pub asset_id: String,
   pub downloaded_bytes: u64,
   pub total_bytes: u64,
-  pub status: DownloadStatus
+  pub status: DownloadStatus,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum DownloadOutcome {
   Success,
-  Failure(String)
+  Failure(String),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DownloadResult {
   pub event_id: String,
-  pub outcome: DownloadOutcome
+  pub outcome: DownloadOutcome,
 }
 
 #[derive(Error, Debug)]
@@ -44,7 +44,7 @@ pub enum DownloaderError {
   #[error("The download has failed: {0}")]
   DownloadFailed(#[from] reqwest::Error),
   #[error("The verification has failed: {0}")]
-  VerificationFailed(String)
+  VerificationFailed(String),
 }
 
 #[async_trait]

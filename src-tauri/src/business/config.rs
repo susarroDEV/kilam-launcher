@@ -1,6 +1,6 @@
+use crate::error::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::error::Result;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LauncherConfig {
