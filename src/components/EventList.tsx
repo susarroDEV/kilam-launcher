@@ -2,20 +2,23 @@ import { useEffect , useState } from "react"
 import { getActiveEvents } from "../lib/ipc"
 import { EventDTO } from "../types/event_store"
 import EventItem from "./EventItem"
+import { useConfig } from "../store/config"
 
 function EventList({uuid} : {uuid: string}) {
   const [events, setEvents] = useState<EventDTO[]>([])
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
+  const config = useConfig((state) => state.config)
   
   useEffect(() => {
     let cancelled = false
     
     const load = async (uuid: string) => {
       try {
+        if (!config) return
         setLoading(true)
-        const events = await getActiveEvents(uuid)
+        const events = await getActiveEvents(uuid, config?.install_dir)
         if (!cancelled) setEvents(events)
       } catch (e) {
         setError(String(e))

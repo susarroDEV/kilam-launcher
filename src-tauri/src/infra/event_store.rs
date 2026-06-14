@@ -14,14 +14,12 @@ const MANIFEST_URL: &str = "https://gist.githubusercontent.com/susarroDEV/c110ce
 
 pub struct RemoteEventStore {
   client: Client,
-  install_dir: String,
 }
 
 impl RemoteEventStore {
-  pub fn new(client: Client, install_dir: String) -> Self {
+  pub fn new(client: Client) -> Self {
     Self {
-      client,
-      install_dir,
+      client
     }
   }
 
@@ -53,7 +51,7 @@ impl RemoteEventStore {
 
 #[async_trait]
 impl EventStore for RemoteEventStore {
-  async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>> {
+  async fn get_active_events(&self, uuid: String, install_dir: String) -> Result<Vec<EventDTO>> {
     let index = self
       .client
       .get(MANIFEST_URL)
@@ -86,7 +84,7 @@ impl EventStore for RemoteEventStore {
 
     for event in events {
       let disk_hashes =
-        RemoteEventStore::build_disk_hashes(self.install_dir.clone(), event.clone()).await;
+        RemoteEventStore::build_disk_hashes(install_dir.clone(), event.clone()).await;
       let status = calculate_status(&event, disk_hashes);
       let event_dto = EventDTO { event, status };
 

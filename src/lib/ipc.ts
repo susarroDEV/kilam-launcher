@@ -27,8 +27,8 @@ export async function getSession() : Promise<UserProfile | null> {
 
 // EVENT STORE
 
-export async function getActiveEvents(uuid: string) : Promise<EventDTO[]>   {
-  return invoke<EventDTO[]>("get_active_events", {uuid})
+export async function getActiveEvents(uuid: string, install_dir: string) : Promise<EventDTO[]>   {
+  return invoke<EventDTO[]>("get_active_events", {uuid, installDir: install_dir})
 }
 
 // DOWNLOADER

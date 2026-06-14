@@ -77,7 +77,8 @@ function EventItem({dto}: {dto: EventDTO}) {
         </button>
       )}
       {(
-        progress &&
+        progress && 
+        status != EventStatus.Ready &&
         <progress value={progress.downloaded_bytes} max={progress.total_bytes} />
       )}
       {(

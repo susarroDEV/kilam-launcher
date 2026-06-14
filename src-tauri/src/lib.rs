@@ -46,7 +46,7 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
   
   let client = Client::new();
   let event_store: Arc<dyn EventStore + Send + Sync> =
-    Arc::new(RemoteEventStore::new(client.clone(), String::new()));
+    Arc::new(RemoteEventStore::new(client.clone()));
   
   app.manage(event_store);
     

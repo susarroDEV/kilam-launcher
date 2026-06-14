@@ -50,7 +50,7 @@ pub struct Event {
 
 #[async_trait]
 pub trait EventStore {
-  async fn get_active_events(&self, uuid: String) -> Result<Vec<EventDTO>>;
+  async fn get_active_events(&self, uuid: String, install_dir: String) -> Result<Vec<EventDTO>>;
 }
 
 #[derive(Error, Debug)]
