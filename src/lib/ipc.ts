@@ -33,8 +33,8 @@ export async function getActiveEvents(uuid: string) : Promise<EventDTO[]>   {
 
 // DOWNLOADER
 
-export async function downloadEvent(event: Event, install_dir: string) : Promise<DownloadResult> {
-  return invoke<DownloadResult>("download_event", {event, installDir: install_dir})
+export async function downloadEvent(event: Event, install_dir: string) : Promise<void> {
+  return invoke<void>("download_event", {event, installDir: install_dir})
 }
 
 export async function onDownloadProgress(

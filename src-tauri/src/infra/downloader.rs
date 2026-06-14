@@ -102,7 +102,7 @@ impl HttpDownloader {
 
 #[async_trait]
 impl Downloader for HttpDownloader {
-  async fn download_event(&self, event: Event, install_dir: String) -> Result<DownloadResult> {
+  async fn download_event(&self, event: Event, install_dir: String) -> Result<()> {
     for asset in &event.assets {
       self.download_asset(asset, &event.id, &install_dir).await?;
     }
@@ -113,11 +113,6 @@ impl Downloader for HttpDownloader {
         outcome: DownloadOutcome::Success
     })?; 
 
-    Ok(
-      DownloadResult {
-        event_id: event.id,
-        outcome: DownloadOutcome::Success
-      }
-    )
+    Ok(())
   }
 }
