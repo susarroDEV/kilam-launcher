@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use crate::business::downloader::Downloader; 
 use crate::error::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -69,16 +68,8 @@ pub struct EventDTO {
   pub status: EventStatus,
 }
 
-pub fn calculate_status(event: &Event, disk_hashes: HashMap<String, String>) -> EventStatus {
-  for asset in &event.assets {
-    match disk_hashes.get(&asset.id) {
-      None => return EventStatus::NotInstalled,
-      Some(hash) if hash != &asset.sha256 => {
-        return EventStatus::Outdated;
-      }
-      _ => {}
-    }
-  }
-
-  EventStatus::Ready
+pub async fn calculate_status(event: &Event, downloader: &dyn Downloader, install_dir: &str) -> EventStatus {
+  if downloader.is_ready(event, install_dir).await
+  { EventStatus::Ready }
+  else { EventStatus::NotInstalled }
 }

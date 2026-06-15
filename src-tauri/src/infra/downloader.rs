@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::{read, remove_file, rename};
 use std::io::Write;
 use std::path::PathBuf;
@@ -103,6 +104,31 @@ impl HttpDownloader {
 
     Ok(())
   }
+
+  async fn build_disk_hashes(install_dir: String, event: Event) -> HashMap<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+      let mut assets: HashMap<String, String> = HashMap::new();
+
+      for asset in &event.assets {
+        let complete_path = format!("{}/{}", install_dir, asset.path);
+        match read(complete_path) {
+          Err(_) => {
+            continue;
+          }
+          Ok(bytes) => {
+            let hash = Sha256::digest(&bytes);
+            let hex_string = hex::encode(hash);
+
+            assets.insert(asset.id.clone(), hex_string);
+          }
+        }
+      }
+
+      assets
+    })
+    .await
+    .unwrap_or_default()
+  }
 }
 
 #[async_trait]
@@ -122,4 +148,20 @@ impl Downloader for HttpDownloader {
 
     Ok(())
   }
+
+  async fn is_ready(&self, event: &Event, install_dir: &str) -> bool {
+    let disk_hashes = HttpDownloader::build_disk_hashes(install_dir.to_string(), event.clone()).await;
+
+    for asset in &event.assets {
+      match disk_hashes.get(&asset.id) {
+        None => return false,
+        Some(hash) if hash != &asset.sha256 => {
+          return false
+        }
+        _ => {}
+      }
+    }
+    true
+  }
+
 }

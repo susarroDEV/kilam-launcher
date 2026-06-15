@@ -48,6 +48,7 @@ pub enum DownloaderError {
 }
 
 #[async_trait]
-pub trait Downloader {
+pub trait Downloader: Send + Sync {
   async fn download_event(&self, event: Event, install_dir: String) -> Result<()>;
+  async fn is_ready(&self, event: &Event, install_dir: &str) -> bool;
 }
