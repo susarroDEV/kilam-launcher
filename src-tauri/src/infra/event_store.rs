@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use crate::business::client_provisioner::ClientProvisioner;
 use crate::business::downloader::Downloader;
 use crate::business::event_store::{
   calculate_status, Event, EventDTO, EventError, EventIndex, EventStore,
@@ -6,13 +6,14 @@ use crate::business::event_store::{
 use crate::error::Result;
 use async_trait::async_trait;
 use reqwest::Client;
+use std::sync::Arc;
 use tauri::{AppHandle, Manager};
 
 const MANIFEST_URL: &str = "https://gist.githubusercontent.com/susarroDEV/c110ce866f2cfec390d03f117b2c54b6/raw/gistfile1.txt";
 
 pub struct RemoteEventStore {
   client: Client,
-  app_handle: tauri::AppHandle
+  app_handle: tauri::AppHandle,
 }
 
 impl RemoteEventStore {
@@ -55,9 +56,10 @@ impl EventStore for RemoteEventStore {
     let mut events_dtos: Vec<EventDTO> = Vec::new();
 
     let downloader = self.app_handle.state::<Arc<dyn Downloader + Send + Sync>>();
+    let provisioner = self.app_handle.state::<Arc<dyn ClientProvisioner + Send + Sync>>();
 
     for event in events {
-      let status = calculate_status(&event, downloader.as_ref(), &install_dir).await;
+      let status = calculate_status(&event, downloader.as_ref(), provisioner.as_ref(), &install_dir).await;
       let event_dto = EventDTO { event, status };
 
       events_dtos.push(event_dto);

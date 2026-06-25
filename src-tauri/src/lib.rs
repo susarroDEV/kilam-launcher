@@ -1,8 +1,10 @@
 use crate::business::auth::AuthProvider;
+use crate::business::client_provisioner::ClientProvisioner;
 use crate::business::config::ConfigStore;
 use crate::business::downloader::Downloader;
 use crate::business::event_store::EventStore;
 use crate::infra::auth::OfflineAuthProvider;
+use crate::infra::client_provisioner::MojangClientProvisioner;
 use crate::infra::config::LocalConfigStore;
 use crate::infra::downloader::HttpDownloader;
 use crate::infra::event_store::RemoteEventStore;
@@ -59,6 +61,11 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Arc::new(HttpDownloader::new(app.handle().clone(), client.clone()));
 
   app.manage(downloader);
+
+  let provisioner: Arc<dyn ClientProvisioner + Send + Sync> =
+    Arc::new(MojangClientProvisioner::new(client.clone()));
+
+  app.manage(provisioner);
 
   app.manage(client);
 

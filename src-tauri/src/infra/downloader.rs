@@ -150,18 +150,16 @@ impl Downloader for HttpDownloader {
   }
 
   async fn is_ready(&self, event: &Event, install_dir: &str) -> bool {
-    let disk_hashes = HttpDownloader::build_disk_hashes(install_dir.to_string(), event.clone()).await;
+    let disk_hashes =
+      HttpDownloader::build_disk_hashes(install_dir.to_string(), event.clone()).await;
 
     for asset in &event.assets {
       match disk_hashes.get(&asset.id) {
         None => return false,
-        Some(hash) if hash != &asset.sha256 => {
-          return false
-        }
+        Some(hash) if hash != &asset.sha256 => return false,
         _ => {}
       }
     }
     true
   }
-
 }

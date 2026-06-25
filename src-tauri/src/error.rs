@@ -17,6 +17,8 @@ pub enum LauncherError {
   Tauri(#[from] tauri::Error),
   #[error("Error in Downloader {0}")]
   Downloader(#[from] business::downloader::DownloaderError),
+  #[error("Error in Client Provisioner {0}")]
+  ClientProvisioner(#[from] business::client_provisioner::ClientProvisionerError),
 }
 
 impl Serialize for LauncherError {

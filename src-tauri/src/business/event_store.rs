@@ -1,4 +1,4 @@
-use crate::business::downloader::Downloader; 
+use crate::business::{client_provisioner::ClientProvisioner, downloader::Downloader};
 use crate::error::Result;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
@@ -68,8 +68,15 @@ pub struct EventDTO {
   pub status: EventStatus,
 }
 
-pub async fn calculate_status(event: &Event, downloader: &dyn Downloader, install_dir: &str) -> EventStatus {
-  if downloader.is_ready(event, install_dir).await
-  { EventStatus::Ready }
-  else { EventStatus::NotInstalled }
+pub async fn calculate_status(
+  event: &Event,
+  downloader: &dyn Downloader,
+  provisioner: &dyn ClientProvisioner,
+  install_dir: &str
+) -> EventStatus {
+  if downloader.is_ready(event, install_dir).await && provisioner.is_provisioned(event, install_dir.to_string()).await {
+    EventStatus::Ready
+  } else {
+    EventStatus::NotInstalled
+  }
 }
