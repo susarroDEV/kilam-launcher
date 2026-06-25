@@ -19,6 +19,8 @@ pub enum LauncherError {
   Downloader(#[from] business::downloader::DownloaderError),
   #[error("Error in Client Provisioner {0}")]
   ClientProvisioner(#[from] business::client_provisioner::ClientProvisionerError),
+  #[error("Error in Launcher {0}")]
+  Launcher(#[from] business::launcher::LaunchError),
 }
 
 impl Serialize for LauncherError {

@@ -3,11 +3,13 @@ use crate::business::client_provisioner::ClientProvisioner;
 use crate::business::config::ConfigStore;
 use crate::business::downloader::Downloader;
 use crate::business::event_store::EventStore;
+use crate::business::launcher::Launcher;
 use crate::infra::auth::OfflineAuthProvider;
 use crate::infra::client_provisioner::MojangClientProvisioner;
 use crate::infra::config::LocalConfigStore;
 use crate::infra::downloader::HttpDownloader;
 use crate::infra::event_store::RemoteEventStore;
+use crate::infra::launcher::ProcessLauncher;
 use reqwest::Client;
 use std::sync::Arc;
 use tauri::Manager;
@@ -34,7 +36,8 @@ pub fn run() {
       crate::commands::auth::logout,
       crate::commands::auth::current_session,
       crate::commands::event_store::get_active_events,
-      crate::commands::downloader::download_event
+      crate::commands::downloader::download_event,
+      crate::commands::launcher::launch_event
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
@@ -66,6 +69,11 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Arc::new(MojangClientProvisioner::new(client.clone()));
 
   app.manage(provisioner);
+
+  let launcher: Arc<dyn Launcher + Send + Sync> =
+    Arc::new(ProcessLauncher::new());
+
+  app.manage(launcher); 
 
   app.manage(client);
 
