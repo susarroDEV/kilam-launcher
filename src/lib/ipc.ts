@@ -52,3 +52,24 @@ export async function onDownloadComplete(
     callback(event.payload)
   })
 }
+
+// PROVISIONER
+
+export interface ProvisionProgress {
+  percentage: number
+  message: string
+}
+
+export async function onProvisionProgress(
+  callback: (progress: ProvisionProgress) => void
+) {
+  return listen<ProvisionProgress>("provision:progress", (event) => {
+    callback(event.payload)
+  })
+}
+
+// LAUNCHER
+
+export async function launchEvent(eventId: string) : Promise<void> {
+  return invoke<void>("launch_event", { eventId })
+}

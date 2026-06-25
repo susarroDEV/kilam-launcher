@@ -34,12 +34,7 @@ impl ProcessLauncher {
 
 #[async_trait]
 impl Launcher for ProcessLauncher {
-  async fn launch(
-    &self,
-    event: &Event,
-    user: &UserProfile,
-    config: &LauncherConfig,
-  ) -> Result<()> {
+  async fn launch(&self, event: &Event, user: &UserProfile, config: &LauncherConfig) -> Result<()> {
     let java = if let Some(path) = &config.java_path {
       path.clone()
     } else if let Ok(java_home) = std::env::var("JAVA_HOME") {
@@ -48,11 +43,17 @@ impl Launcher for ProcessLauncher {
       "java".to_string()
     };
 
-    if !std::path::Path::new(&java).exists() {
+    if (config.java_path.is_some() || std::env::var("JAVA_HOME").is_ok())
+      && !std::path::Path::new(&java).exists()
+    {
       return Err(LaunchError::JavaNotFound.into());
     }
 
-    let sep = if cfg!(target_os = "windows") { ";" } else { ":" };
+    let sep = if cfg!(target_os = "windows") {
+      ";"
+    } else {
+      ":"
+    };
 
     let instance_dir = format!("{}/{}", config.install_dir, event.id);
     let libraries_dir = PathBuf::from(format!("{}/libraries", instance_dir));
@@ -79,6 +80,10 @@ impl Launcher for ProcessLauncher {
       .arg("legacy")
       .arg("--gameDir")
       .arg(&game_dir)
+      .arg("--version")
+      .arg(&event.minecraft_version)
+      .arg("-Xms512m")
+      .arg("-Xmx2G")
       .spawn()
       .map_err(|e| LaunchError::ProcessFailed(e.to_string()))?;
 

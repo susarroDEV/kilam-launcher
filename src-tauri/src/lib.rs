@@ -65,15 +65,15 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
   app.manage(downloader);
 
-  let provisioner: Arc<dyn ClientProvisioner + Send + Sync> =
-    Arc::new(MojangClientProvisioner::new(client.clone()));
+  let provisioner: Arc<dyn ClientProvisioner + Send + Sync> = Arc::new(
+    MojangClientProvisioner::new(client.clone(), app.handle().clone()),
+  );
 
   app.manage(provisioner);
 
-  let launcher: Arc<dyn Launcher + Send + Sync> =
-    Arc::new(ProcessLauncher::new());
+  let launcher: Arc<dyn Launcher + Send + Sync> = Arc::new(ProcessLauncher::new());
 
-  app.manage(launcher); 
+  app.manage(launcher);
 
   app.manage(client);
 

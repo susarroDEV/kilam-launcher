@@ -1,4 +1,3 @@
-use crate::business::client_provisioner::ClientProvisioner;
 use crate::business::downloader::Downloader;
 use crate::business::event_store::{
   calculate_status, Event, EventDTO, EventError, EventIndex, EventStore,
@@ -56,10 +55,9 @@ impl EventStore for RemoteEventStore {
     let mut events_dtos: Vec<EventDTO> = Vec::new();
 
     let downloader = self.app_handle.state::<Arc<dyn Downloader + Send + Sync>>();
-    let provisioner = self.app_handle.state::<Arc<dyn ClientProvisioner + Send + Sync>>();
 
     for event in events {
-      let status = calculate_status(&event, downloader.as_ref(), provisioner.as_ref(), &install_dir).await;
+      let status = calculate_status(&event, downloader.as_ref(), &install_dir).await;
       let event_dto = EventDTO { event, status };
 
       events_dtos.push(event_dto);

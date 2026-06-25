@@ -2,9 +2,11 @@ use crate::business::event_store::Event;
 use crate::error::Result;
 use async_trait::async_trait;
 use reqwest;
+use serde::{Deserialize, Serialize};
 use std::io;
 use thiserror::Error;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Error, Debug)]
 pub enum ClientProvisionerError {
   #[error("Fetch failed: {0}")]
@@ -17,6 +19,12 @@ pub enum ClientProvisionerError {
   VerificationFailed(String),
   #[error("Extraction failed: {0}")]
   ExtractionFailed(#[from] io::Error),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ProvisionProgress {
+  pub percentage: u8,
+  pub message: String,
 }
 
 #[async_trait]

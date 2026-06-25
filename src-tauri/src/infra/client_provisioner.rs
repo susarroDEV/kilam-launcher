@@ -1,11 +1,14 @@
-use crate::LauncherError;
-use crate::business::client_provisioner::{ClientProvisioner, ClientProvisionerError};
+use crate::business::client_provisioner::{
+  ClientProvisioner, ClientProvisionerError, ProvisionProgress,
+};
 use crate::business::event_store::Event;
 use crate::error::Result;
+use crate::LauncherError;
 use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tauri::{AppHandle, Emitter};
 
 const MANIFEST_URL: &str = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
@@ -90,11 +93,22 @@ fn maven_name_to_path(name: &str) -> String {
 
 pub struct MojangClientProvisioner {
   client: Client,
+  app_handle: AppHandle,
 }
 
 impl MojangClientProvisioner {
-  pub fn new(client: Client) -> Self {
-    Self { client }
+  pub fn new(client: Client, app_handle: AppHandle) -> Self {
+    Self { client, app_handle }
+  }
+
+  fn emit_progress(&self, percentage: u8, message: &str) {
+    let _ = self.app_handle.emit(
+      "provision:progress",
+      ProvisionProgress {
+        percentage,
+        message: message.to_string(),
+      },
+    );
   }
 
   async fn download_file(
@@ -103,6 +117,16 @@ impl MojangClientProvisioner {
     dest_path: &std::path::Path,
     sha1: &str,
   ) -> std::result::Result<(), ClientProvisionerError> {
+    if dest_path.exists() && !sha1.is_empty() {
+      use sha1::{Digest, Sha1};
+      if let Ok(bytes) = std::fs::read(dest_path) {
+        let hash = hex::encode(Sha1::digest(&bytes));
+        if hash == sha1 {
+          return Ok(());
+        }
+      }
+    }
+
     let tmp_path = dest_path.with_extension("tmp");
 
     if let Some(dir) = dest_path.parent() {
@@ -154,9 +178,7 @@ impl MojangClientProvisioner {
       },
     )
     .await
-    .map_err(|e| {
-      ClientProvisionerError::ExtractionFailed(std::io::Error::new(std::io::ErrorKind::Other, e))
-    })?
+    .map_err(|e| ClientProvisionerError::ExtractionFailed(std::io::Error::other(e)))?
   }
 
   async fn extract_natives(
@@ -173,8 +195,16 @@ impl MojangClientProvisioner {
       "linux"
     };
 
-    let natives_dir =
-      std::path::PathBuf::from(format!("{}/{}/natives", install_dir, event.id));
+    let natives_dir = std::path::PathBuf::from(format!("{}/{}/natives", install_dir, event.id));
+
+    if natives_dir.exists()
+      && std::fs::read_dir(&natives_dir)
+        .map(|mut d| d.next().is_some())
+        .unwrap_or(false)
+    {
+      return Ok(());
+    }
+
     std::fs::create_dir_all(&natives_dir).map_err(ClientProvisionerError::ExtractionFailed)?;
 
     for library in &version.libraries {
@@ -211,19 +241,12 @@ impl MojangClientProvisioner {
               }
 
               let cursor = std::io::Cursor::new(&bytes);
-              let mut archive = zip::ZipArchive::new(cursor).map_err(|e| {
-                ClientProvisionerError::ExtractionFailed(std::io::Error::new(
-                  std::io::ErrorKind::Other,
-                  e,
-                ))
-              })?;
+              let mut archive = zip::ZipArchive::new(cursor)
+                .map_err(|e| ClientProvisionerError::ExtractionFailed(std::io::Error::other(e)))?;
 
               for i in 0..archive.len() {
                 let mut file = archive.by_index(i).map_err(|e| {
-                  ClientProvisionerError::ExtractionFailed(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e,
-                  ))
+                  ClientProvisionerError::ExtractionFailed(std::io::Error::other(e))
                 })?;
 
                 if file.name().ends_with('/') {
@@ -246,12 +269,7 @@ impl MojangClientProvisioner {
             },
           )
           .await
-          .map_err(|e| {
-            ClientProvisionerError::ExtractionFailed(std::io::Error::new(
-              std::io::ErrorKind::Other,
-              e,
-            ))
-          })??;
+          .map_err(|e| ClientProvisionerError::ExtractionFailed(std::io::Error::other(e)))??;
         }
       }
     }
@@ -263,6 +281,8 @@ impl MojangClientProvisioner {
 #[async_trait]
 impl ClientProvisioner for MojangClientProvisioner {
   async fn provision(&self, event: &Event, install_dir: String) -> Result<()> {
+    self.emit_progress(0, "Obteniendo manifest de versiones...");
+
     let index = self
       .client
       .get(MANIFEST_URL)
@@ -281,6 +301,8 @@ impl ClientProvisioner for MojangClientProvisioner {
         "Version not found".to_string(),
       ))?;
 
+    self.emit_progress(5, "Obteniendo manifest de la versión...");
+
     let version = self
       .client
       .get(&version_entry.url)
@@ -291,8 +313,9 @@ impl ClientProvisioner for MojangClientProvisioner {
       .await
       .map_err(ClientProvisionerError::FetchFailed)?;
 
-    let client_path =
-      std::path::PathBuf::from(format!("{}/{}/client.jar", install_dir, event.id));
+    self.emit_progress(10, "Descargando cliente de Minecraft...");
+
+    let client_path = std::path::PathBuf::from(format!("{}/{}/client.jar", install_dir, event.id));
     self
       .download_file(
         &version.downloads.client.url,
@@ -300,12 +323,19 @@ impl ClientProvisioner for MojangClientProvisioner {
         &version.downloads.client.sha1,
       )
       .await
-      .map_err(|e| LauncherError::ClientProvisioner(e))?;
+      .map_err(LauncherError::ClientProvisioner)?;
 
     let libraries_path =
       std::path::PathBuf::from(format!("{}/{}/libraries", install_dir, event.id));
 
-    for library in &version.libraries {
+    let total_libs = version.libraries.len();
+    for (i, library) in version.libraries.iter().enumerate() {
+      let percentage = 15 + ((i as f32 / total_libs as f32) * 55.0) as u8;
+      self.emit_progress(
+        percentage,
+        &format!("Descargando library {} de {}...", i + 1, total_libs),
+      );
+
       let lib_path = libraries_path.join(&library.downloads.artifact.path);
       self
         .download_file(
@@ -314,8 +344,10 @@ impl ClientProvisioner for MojangClientProvisioner {
           &library.downloads.artifact.sha1,
         )
         .await
-        .map_err(|e| LauncherError::ClientProvisioner(e))?;
+        .map_err(LauncherError::ClientProvisioner)?;
     }
+
+    self.emit_progress(70, "Obteniendo manifest de Fabric...");
 
     let fabric_url = format!(
       "https://meta.fabricmc.net/v2/versions/loader/{}/{}/profile/json",
@@ -332,20 +364,31 @@ impl ClientProvisioner for MojangClientProvisioner {
       .await
       .map_err(ClientProvisionerError::FetchFailed)?;
 
-    for fabric_library in &fabric_manifest.libraries {
+    let total_fabric_libs = fabric_manifest.libraries.len();
+    for (i, fabric_library) in fabric_manifest.libraries.iter().enumerate() {
+      let percentage = 70 + ((i as f32 / total_fabric_libs as f32) * 20.0) as u8;
+      self.emit_progress(
+        percentage,
+        &format!("Descargando Fabric {} de {}...", i + 1, total_fabric_libs),
+      );
+
       let lib_path = maven_name_to_path(&fabric_library.name);
       let full_path = libraries_path.join(&lib_path);
       let download_url = format!("{}{}", fabric_library.url, lib_path);
       self
         .download_file(&download_url, &full_path, "")
         .await
-        .map_err(|e| LauncherError::ClientProvisioner(e))?;
+        .map_err(LauncherError::ClientProvisioner)?;
     }
+
+    self.emit_progress(90, "Extrayendo natives...");
 
     self
       .extract_natives(event, &install_dir, &version)
       .await
-      .map_err(|e| LauncherError::ClientProvisioner(e))?;
+      .map_err(LauncherError::ClientProvisioner)?;
+
+    self.emit_progress(100, "¡Listo!");
 
     Ok(())
   }
