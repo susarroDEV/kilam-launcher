@@ -11,6 +11,10 @@ export async function getConfig() : Promise<LauncherConfig> {
   return invoke<LauncherConfig>("get_config")
 }
 
+export async function updateConfig(newConfig: LauncherConfig) : Promise<void> {
+  return invoke<void>("update_config", { newConfig })
+}
+
 // AUTH
 
 export async function login(username: string) : Promise<UserProfile> {
