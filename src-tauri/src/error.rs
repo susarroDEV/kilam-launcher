@@ -23,12 +23,37 @@ pub enum LauncherError {
   Launcher(#[from] business::launcher::LaunchError),
 }
 
+impl LauncherError {
+  fn kind(&self) -> &'static str {
+    match self {
+      Self::Store(_) => "Store",
+      Self::SerdeJson(_) => "SerdeJson",
+      Self::Auth(_) => "Auth",
+      Self::EventStore(_) => "EventStore",
+      Self::Tauri(_) => "Tauri",
+      Self::Downloader(_) => "Downloader",
+      Self::ClientProvisioner(_) => "ClientProvisioner",
+      Self::Launcher(_) => "Launcher",
+    }
+  }
+}
+
+#[derive(Serialize)]
+struct ErrorPayload<'a> {
+  kind: &'a str,
+  message: String,
+}
+
 impl Serialize for LauncherError {
   fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
   where
     S: serde::Serializer,
   {
-    serializer.serialize_str(&self.to_string())
+    ErrorPayload {
+      kind: self.kind(),
+      message: self.to_string(),
+    }
+    .serialize(serializer)
   }
 }
 
