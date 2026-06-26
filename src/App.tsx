@@ -1,52 +1,50 @@
-import { useEffect, useState } from "react"
-import "./App.css"
-import { useConfig } from "./store/config"
-import { getConfig, getSession } from "./lib/ipc"
-import { useAuth } from "./store/auth"
-import MainScreen from "./pages/MainScreen"
-import LoginScreen from "./pages/LoginScreen"
-import ConfigTest from "./debug/ConfigTest"
+import { useEffect, useState } from 'react'
+import './styles/global.css'
+import { useConfig } from './store/config'
+import { useAuth } from './store/auth'
+import { useNavigation } from './store/navigation'
+import { getConfig, getSession } from './lib/ipc'
+import LoginScreen from './pages/LoginScreen'
+import MainScreen from './pages/MainScreen'
+import DownloadScreen from './pages/DownloadScreen'
+import SettingsScreen from './pages/SettingsScreen'
 
-function App() {
+export default function App() {
   const [checking, setChecking] = useState(true)
 
-  const config = useConfig((state) => state.config) 
-  const setConfig = useConfig((state) => state.setConfig)
-
-  const profile = useAuth((state) => state.profile)
-  const setProfile = useAuth((state) => state.setProfile)
-
+  const setConfig  = useConfig((s) => s.setConfig)
+  const profile    = useAuth((s) => s.profile)
+  const setProfile = useAuth((s) => s.setProfile)
+  const screen     = useNavigation((s) => s.screen)
 
   useEffect(() => {
-    const loadConfig = async() => {
-      setConfig(await getConfig())
-    }
-    
-    const loadSession = async() => {
-      const p = await getSession()
-      if (p) {
-        setProfile(p)
-      }
+    const init = async () => {
+      const [cfg, session] = await Promise.all([getConfig(), getSession()])
+      setConfig(cfg)
+      if (session) setProfile(session)
       setChecking(false)
     }
-
-    loadConfig()
-    loadSession()
+    init()
   }, [setConfig, setProfile])
 
-  return (
-    <>
-      <header>
-        <ConfigTest config = {config}/>
-      </header>
-      {!checking  &&
-        (profile ?
-        <MainScreen/>
-        :
-        <LoginScreen/>
-      )}
-    </>
-  )
-}
+  if (checking) {
+    return (
+      <div style={{
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'var(--color-text-muted)',
+        fontSize: '13px',
+      }}>
+        Cargando...
+      </div>
+    )
+  }
 
-export default App
+  if (!profile) return <LoginScreen />
+
+  if (screen === 'download') return <DownloadScreen />
+  if (screen === 'settings') return <SettingsScreen />
+  return <MainScreen />
+}

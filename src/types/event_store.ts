@@ -25,8 +25,7 @@ export type Event = {
   minecraft_version: string,
   modloader: ModLoader,
   modloader_version: string,
-  server_ip: string,
-  whitelist: string[],
+whitelist: string[],
   assets: Asset[]
 }
 
