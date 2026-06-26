@@ -44,6 +44,11 @@ pub fn run() {
 }
 
 fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+  if let Some(window) = app.get_webview_window("main") {
+    let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/128x128.png"))?;
+    let _ = window.set_icon(icon);
+  }
+
   let auth_provider: Arc<dyn AuthProvider + Send + Sync> =
     Arc::new(OfflineAuthProvider::new(app.handle().clone()));
 
