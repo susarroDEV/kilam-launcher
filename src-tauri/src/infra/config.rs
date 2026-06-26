@@ -36,6 +36,8 @@ impl ConfigStore for LocalConfigStore {
             .to_string_lossy()
             .to_string(),
           close_on_launch: true,
+          min_memory_mb: 512,
+          max_memory_mb: 2048,
         };
 
         Ok(default_config)

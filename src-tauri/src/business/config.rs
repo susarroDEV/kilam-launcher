@@ -7,6 +7,8 @@ pub struct LauncherConfig {
   pub java_path: Option<String>,
   pub install_dir: String,
   pub close_on_launch: bool,
+  pub min_memory_mb: u32,
+  pub max_memory_mb: u32
 }
 
 #[async_trait]

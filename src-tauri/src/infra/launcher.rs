@@ -82,8 +82,8 @@ impl Launcher for ProcessLauncher {
       .arg(&game_dir)
       .arg("--version")
       .arg(&event.minecraft_version)
-      .arg("-Xms512m")
-      .arg("-Xmx2G")
+      .arg(format!("-Xms{}m", config.min_memory_mb))
+      .arg(format!("-Xmx{}m", config.max_memory_mb))
       .spawn()
       .map_err(|e| LaunchError::ProcessFailed(e.to_string()))?;
 
