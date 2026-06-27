@@ -119,7 +119,8 @@ export default function DownloadScreen() {
         await downloadEvent(event, installDir)
       } catch (e) {
         if (!cancelled) {
-          setFailureMessage(String(e))
+          const err = e as { message?: string }
+          setFailureMessage(err.message ?? 'Error desconocido')
           setFailed(true)
         }
         cleanup()

@@ -2,8 +2,8 @@ export type LauncherConfig = {
   java_path?: string,
   install_dir: string,
   close_on_launch: boolean,
-  min_memory?: number,
-  max_memory?: number
+  min_memory_mb: number,
+  max_memory_mb: number,
 }
 
 export type ConfigStore = {

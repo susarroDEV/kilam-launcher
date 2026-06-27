@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import '../styles/shared.css'
 import '../styles/pages/main.css'
 import { useAuth } from '../store/auth'
@@ -192,7 +193,10 @@ export default function MainScreen() {
           if (data.length > 0) setSelectedId(data[0].event.id)
         }
       } catch (e) {
-        if (!cancelled) setFetchError(String(e))
+        if (!cancelled) {
+          const err = e as { message?: string }
+          setFetchError(err.message ?? 'Error desconocido')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -264,12 +268,14 @@ export default function MainScreen() {
       )}
 
       <footer className="main-footer">
-        {['KILAM', 'Info', 'Crear', 'Hacer / actualizar', 'Sugerencias y quejas'].map((item, i) => (
-          <span key={i} className="main-footer__link">
-            {i > 0 && <span aria-hidden="true">· </span>}
-            {item}
-          </span>
-        ))}
+        <button
+          type="button"
+          className="main-footer__site-link"
+          onClick={() => openUrl('https://kilam.net')}
+        >
+          KILAM
+        </button>
+        <span className="main-footer__copy">© {new Date().getFullYear()}</span>
       </footer>
     </div>
   )

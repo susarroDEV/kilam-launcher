@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import '../styles/pages/login.css'
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { login } from '../lib/ipc'
 import { useAuth } from '../store/auth'
 import { useNavigation } from '../store/navigation'
@@ -40,7 +41,8 @@ export default function LoginScreen() {
       navigate('main')
       setProfile(profile)
     } catch (err) {
-      setError(String(err))
+      const e = err as { message?: string }
+      setError(e.message ?? 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -110,7 +112,13 @@ export default function LoginScreen() {
 
         <footer className="login-footer">
           <span className="login-footer__item">v0.1.0</span>
-          <span className="login-footer__item">kilam.net</span>
+          <button
+            type="button"
+            className="login-footer__site-link"
+            onClick={() => openUrl('https://kilam.net')}
+          >
+            kilam.net
+          </button>
         </footer>
       </section>
     </main>

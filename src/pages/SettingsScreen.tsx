@@ -56,8 +56,8 @@ export default function SettingsScreen() {
   const [javaPath,      setJavaPath]      = useState(() => config?.java_path ?? '')
   const [installDir,    setInstallDir]    = useState(() => config?.install_dir ?? '')
   const [closeOnLaunch, setCloseOnLaunch] = useState(() => config?.close_on_launch ?? false)
-  const [minMemory,     setMinMemory]     = useState(() => config?.min_memory ?? 512)
-  const [maxMemory,     setMaxMemory]     = useState(() => config?.max_memory ?? 2048)
+  const [minMemory,     setMinMemory]     = useState(() => config?.min_memory_mb ?? 512)
+  const [maxMemory,     setMaxMemory]     = useState(() => config?.max_memory_mb ?? 2048)
   const [saving,        setSaving]        = useState(false)
   const [saved,         setSaved]         = useState(false)
   const [saveError,     setSaveError]     = useState<string | null>(null)
@@ -75,8 +75,8 @@ export default function SettingsScreen() {
       java_path: javaPath || undefined,
       install_dir: installDir,
       close_on_launch: closeOnLaunch,
-      min_memory: minMemory,
-      max_memory: maxMemory,
+      min_memory_mb: minMemory,
+      max_memory_mb: maxMemory,
     }
     try {
       await updateConfig(newConfig)
@@ -84,7 +84,8 @@ export default function SettingsScreen() {
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (e) {
-      setSaveError(String(e))
+      const err = e as { message?: string }
+      setSaveError(err.message ?? 'Error al guardar')
     } finally {
       setSaving(false)
     }
