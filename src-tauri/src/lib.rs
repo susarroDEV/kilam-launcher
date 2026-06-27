@@ -10,6 +10,7 @@ use crate::infra::config::LocalConfigStore;
 use crate::infra::downloader::HttpDownloader;
 use crate::infra::event_store::RemoteEventStore;
 use crate::infra::launcher::ProcessLauncher;
+use crate::infra::microsoft_auth::MicrosoftAuthProvider;
 use reqwest::Client;
 use std::sync::Arc;
 use tauri::Manager;
@@ -21,6 +22,9 @@ mod commands;
 mod error;
 mod infra;
 
+pub struct OfflineAuth(pub Arc<dyn business::auth::AuthProvider + Send + Sync>);
+pub struct MicrosoftAuth(pub Arc<dyn business::auth::AuthProvider + Send + Sync>);
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tracing_subscriber::fmt::init();
@@ -28,11 +32,13 @@ pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_store::Builder::default().build())
+    .plugin(tauri_plugin_oauth::init())
     .setup(setup)
     .invoke_handler(tauri::generate_handler![
       crate::commands::config::get_config,
       crate::commands::config::update_config,
       crate::commands::auth::login,
+      crate::commands::auth::login_microsoft,
       crate::commands::auth::logout,
       crate::commands::auth::current_session,
       crate::commands::event_store::get_active_events,
@@ -49,12 +55,16 @@ fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let _ = window.set_icon(icon);
   }
 
-  let auth_provider: Arc<dyn AuthProvider + Send + Sync> =
-    Arc::new(OfflineAuthProvider::new(app.handle().clone()));
-
-  app.manage(auth_provider);
-
   let client = Client::new();
+
+  let offline_auth: Arc<dyn AuthProvider + Send + Sync> =
+    Arc::new(OfflineAuthProvider::new(app.handle().clone()));
+  app.manage(OfflineAuth(offline_auth));
+
+  let microsoft_auth: Arc<dyn AuthProvider + Send + Sync> =
+    Arc::new(MicrosoftAuthProvider::new(app.handle().clone(), client.clone()));
+  app.manage(MicrosoftAuth(microsoft_auth));
+
   let event_store: Arc<dyn EventStore + Send + Sync> =
     Arc::new(RemoteEventStore::new(client.clone(), app.handle().clone()));
 

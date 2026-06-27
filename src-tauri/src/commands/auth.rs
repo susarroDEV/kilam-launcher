@@ -1,30 +1,39 @@
-use std::sync::Arc;
-
-use crate::business::auth::{AuthProvider, UserProfile};
+use crate::business::auth::UserProfile;
 use crate::error::Result;
+use crate::{MicrosoftAuth, OfflineAuth};
 
 #[tauri::command]
 pub async fn login(
-  provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>,
+  provider: tauri::State<'_, OfflineAuth>,
   username: String,
 ) -> Result<UserProfile> {
-  let profile = provider.login(&username).await?;
-
-  Ok(profile)
+  provider.0.login(&username).await
 }
 
 #[tauri::command]
-pub async fn logout(provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>) -> Result<()> {
-  provider.logout().await?;
+pub async fn login_microsoft(
+  provider: tauri::State<'_, MicrosoftAuth>,
+) -> Result<UserProfile> {
+  provider.0.login("").await
+}
 
+#[tauri::command]
+pub async fn logout(
+  offline: tauri::State<'_, OfflineAuth>,
+  microsoft: tauri::State<'_, MicrosoftAuth>,
+) -> Result<()> {
+  offline.0.logout().await?;
+  microsoft.0.logout().await?;
   Ok(())
 }
 
 #[tauri::command]
 pub async fn current_session(
-  provider: tauri::State<'_, Arc<dyn AuthProvider + Send + Sync>>,
+  offline: tauri::State<'_, OfflineAuth>,
+  microsoft: tauri::State<'_, MicrosoftAuth>,
 ) -> Result<Option<UserProfile>> {
-  let profile = provider.current_session().await?;
-
-  Ok(profile)
+  if let Some(p) = microsoft.0.current_session().await? {
+    return Ok(Some(p));
+  }
+  offline.0.current_session().await
 }

@@ -21,6 +21,10 @@ pub enum LauncherError {
   ClientProvisioner(#[from] business::client_provisioner::ClientProvisionerError),
   #[error("Error in Launcher {0}")]
   Launcher(#[from] business::launcher::LaunchError),
+  #[error("IO error: {0}")]
+  Io(#[from] std::io::Error),
+  #[error("Opener error: {0}")]
+  Opener(#[from] tauri_plugin_opener::Error),
 }
 
 impl LauncherError {
@@ -34,6 +38,8 @@ impl LauncherError {
       Self::Downloader(_) => "Downloader",
       Self::ClientProvisioner(_) => "ClientProvisioner",
       Self::Launcher(_) => "Launcher",
+      Self::Io(_) => "Io",
+      Self::Opener(_) => "Opener",
     }
   }
 }

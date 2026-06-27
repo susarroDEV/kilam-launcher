@@ -28,9 +28,13 @@ tracing-subscriber = "0.3.23"
 tauri-plugin-store = "2.4.3"
 md-5 = "0.11.0"
 uuid = { version = "1.23.2", features = ["v4"] }
-reqwest = { version = "0.13.4", features = ["json", "rustls"] }
+reqwest = { version = "0.13.4", features = ["json", "rustls", "form"] }
 sha2 = "0.11.0"
 hex = "0.4.3"
 async-trait = "0.1.89"
 sha1 = "0.11.0"
 zip = "8.6.0"
+tauri-plugin-oauth = "2.0.0"
+keyring = "4.1.2"
+tokio = { version = "1.52.3", features = ["sync"] }
+url = "2.5.8"

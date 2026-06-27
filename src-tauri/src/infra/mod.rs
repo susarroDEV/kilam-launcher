@@ -4,3 +4,4 @@ pub mod config;
 pub mod downloader;
 pub mod event_store;
 pub mod launcher;
+pub mod microsoft_auth;

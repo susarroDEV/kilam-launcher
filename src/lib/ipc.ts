@@ -21,6 +21,10 @@ export async function login(username: string) : Promise<UserProfile> {
   return invoke<UserProfile>("login", { username })
 }
 
+export async function loginMicrosoft(): Promise<UserProfile> {
+  return invoke<UserProfile>("login_microsoft")
+}
+
 export async function logout() {
   return invoke("logout")
 }

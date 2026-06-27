@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import '../styles/pages/login.css'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { login } from '../lib/ipc'
+import { login, loginMicrosoft } from '../lib/ipc'
 import { useAuth } from '../store/auth'
 import { useNavigation } from '../store/navigation'
 import Button from '../components/ui/Button'
@@ -21,6 +21,7 @@ const MS_ICON = (
 export default function LoginScreen() {
   const [username, setUsername] = useState('')
   const [loading, setLoading]   = useState(false)
+  const [msLoading, setMsLoading] = useState(false)
   const [error, setError]       = useState('')
   const setProfile = useAuth((s) => s.setProfile)
   const navigate   = useNavigation((s) => s.navigate)
@@ -45,6 +46,21 @@ export default function LoginScreen() {
       setError(e.message ?? 'Error al iniciar sesión')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleMicrosoftLogin() {
+    setMsLoading(true)
+    setError('')
+    try {
+      const profile = await loginMicrosoft()
+      setProfile(profile)
+      navigate('main')
+    } catch (err) {
+      const e = err as { message?: string }
+      setError(e.message ?? 'Error al iniciar sesión con Microsoft')
+    } finally {
+      setMsLoading(false)
     }
   }
 
@@ -105,7 +121,13 @@ export default function LoginScreen() {
           <div className="login-separator__line" />
         </div>
 
-        <Button variant="secondary" disabled className="btn--block">
+        <Button
+          variant="secondary"
+          loading={msLoading}
+          disabled={msLoading}
+          onClick={handleMicrosoftLogin}
+          className="btn--block"
+        >
           {MS_ICON}
           Iniciar sesión con Microsoft
         </Button>
